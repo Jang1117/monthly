@@ -185,7 +185,7 @@
 
     let currentDate = new Date();
     let events = [];
-    let selectedUser = 'yang';
+    let selectedUsers = ['yang'];
     let selectedType = 'general';
     let editingEventId = null;
     let dragSelection = null;
@@ -199,6 +199,8 @@
       if (!Array.isArray(list)) return [];
       return list.map((ev, index) => {
         const startDate = ev.startDate || ev.date || formatDateKey(new Date());
+        let users = Array.isArray(ev.users) ? ev.users.filter(u => userMeta[u]) : (ev.user ? [ev.user] : []);
+        if (users.length === 0) users = ['yang'];
         return {
           id: ev.id || ev.id === 0 ? String(ev.id) : (ev.id || `${Date.now()}-${index}`),
           startDate,
@@ -207,7 +209,7 @@
           endTime: ev.endTime || ev.endTime || '10:00',
           title: ev.title || '',
           memo: ev.memo || '',
-          user: ev.user || 'yang',
+          users,
           type: ev.type || 'general',
           allDay: !!ev.allDay
         };
@@ -418,9 +420,13 @@
           bar.style.top = `${top}px`;
           bar.style.left = `${left}px`;
           bar.style.width = `${width}px`;
-          bar.style.background = userMeta[ev.user]?.color || typeMeta[ev.type]?.color || typeMeta.general.color;
+          const userColors = ev.users.map(u => userMeta[u]?.color).filter(Boolean);
+          bar.style.background = userColors.length > 1
+            ? `linear-gradient(90deg, ${userColors.join(', ')})`
+            : (userColors[0] || typeMeta[ev.type]?.color || typeMeta.general.color);
+          const namesLabel = ev.users.map(u => userMeta[u]?.name).filter(Boolean).join(', ');
           const memoLabel = ev.memo ? `${ev.memo} ` : '';
-          bar.textContent = `${memoLabel}${getTypeLabel(ev.type)} · ${userMeta[ev.user].name}`;
+          bar.textContent = `${memoLabel}${getTypeLabel(ev.type)} · ${namesLabel}`;
 
           bar.addEventListener('mousedown', (e) => {
             e.stopPropagation();
@@ -448,7 +454,7 @@
     function goToday() { currentDate = new Date(); loadEvents(); }
 
     function updateUserButtons() {
-      document.querySelectorAll('.user-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.user === selectedUser));
+      document.querySelectorAll('.user-btn').forEach(btn => btn.classList.toggle('active', selectedUsers.includes(btn.dataset.user)));
     }
 
     function updateTypeButtons() {
@@ -466,7 +472,7 @@
       const modalTitle = document.getElementById('modalTitle');
 
       editingEventId = event ? event.id : null;
-      selectedUser = event ? event.user : 'yang';
+      selectedUsers = event ? [...event.users] : ['yang'];
       selectedType = event?.type || 'general';
       updateUserButtons();
       updateTypeButtons();
@@ -513,8 +519,9 @@
       if (!startDate || !endDate) { alert('시작/종료 날짜를 선택하세요.'); return; }
       if (startDate > endDate) { alert('종료 날짜는 시작 날짜보다 늦어야 합니다.'); return; }
       if (!document.getElementById('allDayCheckbox').checked && startDate === endDate && startTime >= endTime) { alert('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
+      if (selectedUsers.length === 0) { alert('사용자를 한 명 이상 선택하세요.'); return; }
 
-      const payload = { startDate, endDate, startTime, endTime, title: '', memo, user: selectedUser, type: selectedType, allDay: document.getElementById('allDayCheckbox').checked };
+      const payload = { startDate, endDate, startTime, endTime, title: '', memo, users: [...selectedUsers], type: selectedType, allDay: document.getElementById('allDayCheckbox').checked };
 
       if (editingEventId) {
         await apiUpdateEvent(editingEventId, payload);
@@ -560,7 +567,10 @@
 
     document.querySelectorAll('.user-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        selectedUser = btn.dataset.user;
+        const user = btn.dataset.user;
+        const idx = selectedUsers.indexOf(user);
+        if (idx >= 0) selectedUsers.splice(idx, 1);
+        else selectedUsers.push(user);
         updateUserButtons();
       });
     });
