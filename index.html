@@ -52,8 +52,8 @@
     .legend { display:flex; gap:10px; flex-wrap:wrap; flex-shrink:0; }
     .legend-item { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#f8fafc; border:1px solid var(--line); border-radius:999px; font-size:0.92rem; color:#334155; }
     .legend-dot { width:10px; height:10px; border-radius:50%; }
-    .calendar { position:relative; flex:1; min-height:0; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); grid-template-rows: auto repeat(var(--rows, 5), 1fr); gap:10px; overflow:hidden; }
-    .calendar.expanded { overflow-x:hidden; overflow-y:auto; grid-template-rows: auto repeat(var(--rows, 5), minmax(var(--row-min-height, 130px), auto)); }
+    .calendar { position:relative; flex:1; min-height:0; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); grid-template-rows: min-content repeat(var(--rows, 5), 1fr); gap:10px; overflow:hidden; }
+    .calendar.expanded { overflow-x:hidden; overflow-y:auto; grid-template-rows: min-content repeat(var(--rows, 5), minmax(var(--row-min-height, 130px), auto)); }
     .event-bar { position:absolute; height:30px; border-radius:16px; color:white; font-size:0.83rem; padding:0 12px; display:flex; align-items:center; justify-content:space-between; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; box-shadow:0 6px 16px rgba(15,23,42,0.18); z-index:5; }
     .day-name { text-align:center; padding:8px; background:#f8fafc; border:1px solid var(--line); border-radius:12px; font-weight:700; color:#475569; }
     .day-cell { min-height:0; overflow:hidden; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px; position:relative; }
