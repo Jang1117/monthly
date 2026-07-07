@@ -89,6 +89,35 @@
     .danger-btn { background:#fee2e2; color:#b91c1c; }
 
     .event-bar.dragging { opacity:0.9; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(15,23,42,0.28); }
+
+    @media (max-width: 780px) {
+      body { padding: 10px; }
+      .container { padding: 14px; border-radius: 18px; }
+      header { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 12px; }
+      h1 { font-size: 1.4rem; text-align: center; }
+      .legend { justify-content: center; }
+      .controls { justify-content: center; }
+      .calendar {
+        overflow-x: hidden;
+        overflow-y: auto;
+        gap: 6px;
+        grid-template-rows: min-content repeat(var(--rows, 5), minmax(88px, auto));
+      }
+      .day-name { font-size: 0.8rem; padding: 6px 4px; }
+      .day-cell { padding: 6px; gap: 4px; }
+      .day-number { font-size: 0.92rem; }
+      .event-bar { font-size: 0.76rem; height: 27px; padding: 0 8px; }
+      .modal-card { width: min(92vw, 480px); padding: 16px; }
+    }
+
+    @media (max-width: 420px) {
+      h1 { font-size: 1.2rem; }
+      .legend-item { font-size: 0.8rem; padding: 5px 8px; }
+      button { padding: 8px 12px; font-size: 0.88rem; }
+      .day-name { font-size: 0.72rem; }
+      .day-number { font-size: 0.85rem; }
+      .event-bar { font-size: 0.7rem; height: 25px; }
+    }
   </style>
 </head>
 <body>
