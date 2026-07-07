@@ -224,7 +224,7 @@
     const API_BASE_URL = 'https://monthly-uur4.onrender.com'; // 외부 API 호스트를 입력하세요. 로컬 서버 사용 시 ''로 비워두세요.
 
     let currentDate = new Date();
-    let events = [];
+    let events = normalizeEvents(JSON.parse(localStorage.getItem('monthlyScheduleEvents') || '[]'));
     let selectedUsers = [];
     let selectedType = 'general';
     let editingEventId = null;
@@ -310,6 +310,7 @@
         if (!res.ok) throw new Error('API returned ' + res.status);
         const list = await res.json();
         events = normalizeEvents(list);
+        localStorage.setItem('monthlyScheduleEvents', JSON.stringify(events));
         renderCalendar();
       } catch (e) {
         console.warn('Failed to load events from server, falling back to localStorage', e);
@@ -770,6 +771,7 @@
       resizeTimer = setTimeout(renderCalendar, 150);
     });
 
+    renderCalendar();
     loadEvents();
   </script>
 </body>
