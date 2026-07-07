@@ -244,7 +244,7 @@
 
     async function loadEvents() {
       try {
-        const res = await fetch('/events');
+        const res = await fetch(`${location.origin}/events`);
         const list = await res.json();
         events = normalizeEvents(list);
         renderCalendar();
@@ -256,16 +256,16 @@
     }
 
     async function apiCreateEvent(ev) {
-      const res = await fetch('/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+      const res = await fetch(`${location.origin}/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
       return res.json();
     }
 
     async function apiUpdateEvent(id, ev) {
-      await fetch(`/events/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+      await fetch(`${location.origin}/events/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
     }
 
     async function apiDeleteEvent(id) {
-      await fetch(`/events/${id}`, { method: 'DELETE' });
+      await fetch(`${location.origin}/events/${id}`, { method: 'DELETE' });
     }
 
     function renderCalendar() {
