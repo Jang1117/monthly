@@ -712,7 +712,26 @@
       finalizeDragSelection();
     });
 
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const modal = document.getElementById('eventModal'); if (modal.classList.contains('active')) closeModal(); } });
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('eventModal');
+      if (e.key === 'Escape') {
+        if (modal.classList.contains('active')) closeModal();
+        return;
+      }
+      if (e.key === 'Delete') {
+        const activeTag = document.activeElement.tagName;
+        if (modal.classList.contains('active') && editingEventId && activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+          deleteCurrentEvent();
+        }
+      }
+    });
+
+    document.getElementById('memo').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        saveEvent();
+      }
+    });
 
     loadEvents();
   </script>
