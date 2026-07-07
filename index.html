@@ -245,27 +245,60 @@
     async function loadEvents() {
       try {
         const res = await fetch(`${location.origin}/events`);
+        if (!res.ok) throw new Error('API returned ' + res.status);
         const list = await res.json();
         events = normalizeEvents(list);
         renderCalendar();
       } catch (e) {
-        console.error('Failed to load events', e);
-        events = [];
+        console.warn('Failed to load events from server, falling back to localStorage', e);
+        try {
+          const stored = JSON.parse(localStorage.getItem('monthlyScheduleEvents') || '[]');
+          events = normalizeEvents(stored);
+        } catch (ee) {
+          events = [];
+        }
         renderCalendar();
       }
     }
 
     async function apiCreateEvent(ev) {
-      const res = await fetch(`${location.origin}/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
-      return res.json();
+      try {
+        const res = await fetch(`${location.origin}/events`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+        if (!res.ok) throw new Error('API create failed ' + res.status);
+        return res.json();
+      } catch (e) {
+        // fallback: save to localStorage
+        const list = JSON.parse(localStorage.getItem('monthlyScheduleEvents') || '[]');
+        const id = Date.now().toString();
+        const created = { ...ev, id };
+        list.push(created);
+        localStorage.setItem('monthlyScheduleEvents', JSON.stringify(list));
+        return created;
+      }
     }
 
     async function apiUpdateEvent(id, ev) {
-      await fetch(`${location.origin}/events/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+      try {
+        const res = await fetch(`${location.origin}/events/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ev) });
+        if (!res.ok) throw new Error('API update failed ' + res.status);
+      } catch (e) {
+        // fallback: update localStorage
+        const list = JSON.parse(localStorage.getItem('monthlyScheduleEvents') || '[]');
+        const updated = list.map(item => item.id === id ? { ...item, ...ev, id } : item);
+        localStorage.setItem('monthlyScheduleEvents', JSON.stringify(updated));
+      }
     }
 
     async function apiDeleteEvent(id) {
-      await fetch(`${location.origin}/events/${id}`, { method: 'DELETE' });
+      try {
+        const res = await fetch(`${location.origin}/events/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('API delete failed ' + res.status);
+      } catch (e) {
+        // fallback: delete from localStorage
+        const list = JSON.parse(localStorage.getItem('monthlyScheduleEvents') || '[]');
+        const updated = list.filter(item => item.id !== id);
+        localStorage.setItem('monthlyScheduleEvents', JSON.stringify(updated));
+      }
     }
 
     function renderCalendar() {
@@ -478,7 +511,10 @@
         const created = await apiCreateEvent(payload);
         events.push(normalizeEvents([created])[0]);
       }
-
+      // update local cache so page works offline / on GitHub Pages
+      try {
+        localStorage.setItem('monthlyScheduleEvents', JSON.stringify(events));
+      } catch (e) {}
       closeModal();
       renderCalendar();
     }
@@ -490,6 +526,7 @@
 
       await apiDeleteEvent(editingEventId);
       events = events.filter(ev => ev.id !== editingEventId);
+      try { localStorage.setItem('monthlyScheduleEvents', JSON.stringify(events)); } catch (e) {}
       closeModal();
       renderCalendar();
     }
