@@ -395,7 +395,9 @@
       const calendar = document.getElementById('calendar');
       calendar.querySelectorAll('.event-bar').forEach(el => el.remove());
       const rows = Math.ceil(dateKeys.length / 7);
-      const rowEventCounts = Array(rows).fill(0);
+      // Per row, track which date-ranges occupy each vertical slot so only
+      // segments that actually overlap in date get stacked below one another.
+      const rowSlots = Array.from({ length: rows }, () => []);
 
       events.forEach(ev => {
         const eventStart = ev.startDate;
@@ -417,9 +419,17 @@
           const endCell = cellMap[segEnd];
           if (!startCell || !endCell) continue;
 
+          const slots = rowSlots[rowIndex];
+          let slotIndex = slots.findIndex(ranges => !ranges.some(r => segStart <= r.end && segEnd >= r.start));
+          if (slotIndex === -1) {
+            slotIndex = slots.length;
+            slots.push([]);
+          }
+          slots[slotIndex].push({ start: segStart, end: segEnd });
+
           const startLeft = startCell.offsetLeft;
           const endLeft = endCell.offsetLeft + endCell.offsetWidth;
-          const top = startCell.offsetTop + 34 + rowEventCounts[rowIndex] * 32;
+          const top = startCell.offsetTop + 34 + slotIndex * 32;
           const left = startLeft + 2;
           const width = endLeft - startLeft - 4;
 
@@ -432,7 +442,9 @@
           bar.style.background = userColors.length > 1
             ? `linear-gradient(90deg, ${userColors.join(', ')})`
             : (userColors[0] || typeMeta[ev.type]?.color || typeMeta.general.color);
-          const namesLabel = ev.users.map(u => userMeta[u]?.name).filter(Boolean).join(', ');
+          const namesLabel = ev.users.length >= Object.keys(userMeta).length
+            ? '팀'
+            : ev.users.map(u => userMeta[u]?.name).filter(Boolean).join(', ');
           const timeLabel = ev.allDay ? '' : `${ev.startTime} `;
           if (ev.type === 'external') {
             bar.textContent = ev.memo ? `${timeLabel}${ev.memo} - ${namesLabel}` : `${timeLabel}${namesLabel}`;
@@ -462,7 +474,6 @@
           });
 
           calendar.appendChild(bar);
-          rowEventCounts[rowIndex] += 1;
         }
       });
     }
@@ -575,6 +586,13 @@
       renderCalendar();
       openModal(startDate, null, { startDate, endDate });
     }
+
+    document.getElementById('startTime').addEventListener('change', (e) => {
+      const [h, m] = e.target.value.split(':').map(Number);
+      if (Number.isNaN(h) || Number.isNaN(m)) return;
+      const newHour = (h + 1) % 24;
+      document.getElementById('endTime').value = `${String(newHour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    });
 
     document.getElementById('allDayCheckbox').addEventListener('change', (e) => {
       const disabled = e.target.checked;
