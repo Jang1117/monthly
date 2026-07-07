@@ -612,8 +612,6 @@
 
     async function deleteCurrentEvent() {
       if (!editingEventId) return;
-      const ok = confirm('이 일정을 삭제할까요?');
-      if (!ok) return;
 
       await apiDeleteEvent(editingEventId);
       events = events.filter(ev => ev.id !== editingEventId);
