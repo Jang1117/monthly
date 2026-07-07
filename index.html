@@ -433,19 +433,25 @@
             ? `linear-gradient(90deg, ${userColors.join(', ')})`
             : (userColors[0] || typeMeta[ev.type]?.color || typeMeta.general.color);
           const namesLabel = ev.users.map(u => userMeta[u]?.name).filter(Boolean).join(', ');
+          const timeLabel = ev.allDay ? '' : `${ev.startTime} `;
           if (ev.type === 'external') {
-            bar.textContent = ev.memo ? `${ev.memo} - ${namesLabel}` : namesLabel;
+            bar.textContent = ev.memo ? `${timeLabel}${ev.memo} - ${namesLabel}` : `${timeLabel}${namesLabel}`;
           } else {
             const memoLabel = ev.memo ? `${ev.memo} ` : '';
-            bar.textContent = `${memoLabel}${getTypeLabel(ev.type)} · ${namesLabel}`;
+            bar.textContent = `${timeLabel}${memoLabel}${getTypeLabel(ev.type)} · ${namesLabel}`;
           }
 
           bar.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            const sampleCell = document.querySelector('.day-cell');
+            const allCells = document.querySelectorAll('.day-cell');
+            const sampleCell = allCells[0];
             const cellWidth = sampleCell ? sampleCell.offsetWidth : 100;
-            dragEventState = { active: true, eventId: ev.id, originalStart: ev.startDate, originalEnd: ev.endDate, startX: e.clientX, lastDeltaDays: 0, bar, cellWidth };
+            let rowHeight = sampleCell ? sampleCell.offsetHeight : 100;
+            if (allCells.length > 7) {
+              rowHeight = allCells[7].getBoundingClientRect().top - allCells[0].getBoundingClientRect().top;
+            }
+            dragEventState = { active: true, eventId: ev.id, originalStart: ev.startDate, originalEnd: ev.endDate, startX: e.clientX, startY: e.clientY, lastDeltaDays: 0, bar, cellWidth, rowHeight };
             bar.classList.add('dragging');
           });
 
@@ -600,10 +606,13 @@
       if (!dragEventState || !dragEventState.active) return;
       e.preventDefault();
       const deltaX = e.clientX - dragEventState.startX;
-      const deltaDays = Math.round(deltaX / dragEventState.cellWidth);
+      const deltaY = e.clientY - dragEventState.startY;
+      const deltaCols = Math.round(deltaX / dragEventState.cellWidth);
+      const deltaRows = Math.round(deltaY / dragEventState.rowHeight);
+      const deltaDays = deltaCols + deltaRows * 7;
       if (deltaDays === dragEventState.lastDeltaDays) return;
       dragEventState.lastDeltaDays = deltaDays;
-      dragEventState.bar.style.transform = `translateX(${deltaDays * dragEventState.cellWidth}px)`;
+      dragEventState.bar.style.transform = `translate(${deltaCols * dragEventState.cellWidth}px, ${deltaRows * dragEventState.rowHeight}px)`;
     });
 
     document.addEventListener('mouseup', async (e) => {
