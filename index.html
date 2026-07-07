@@ -49,10 +49,11 @@
     button { border:none; border-radius:999px; padding:10px 14px; font-size:0.95rem; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease; }
     .primary-btn { background: var(--primary); color:white; box-shadow: 0 8px 18px rgba(79,70,229,0.2); }
     .secondary-btn { background:#f3f4f6; color:#374151; }
-    .legend { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 18px; flex-shrink:0; }
+    .legend { display:flex; gap:10px; flex-wrap:wrap; flex-shrink:0; }
     .legend-item { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#f8fafc; border:1px solid var(--line); border-radius:999px; font-size:0.92rem; color:#334155; }
     .legend-dot { width:10px; height:10px; border-radius:50%; }
     .calendar { position:relative; flex:1; min-height:0; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); grid-template-rows: auto repeat(var(--rows, 5), 1fr); gap:10px; overflow:hidden; }
+    .calendar.expanded { overflow-x:hidden; overflow-y:auto; grid-template-rows: auto repeat(var(--rows, 5), minmax(130px, auto)); }
     .event-bar { position:absolute; height:30px; border-radius:16px; color:white; font-size:0.83rem; padding:0 12px; display:flex; align-items:center; justify-content:space-between; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; box-shadow:0 6px 16px rgba(15,23,42,0.18); z-index:5; }
     .day-name { text-align:center; padding:8px; background:#f8fafc; border:1px solid var(--line); border-radius:12px; font-weight:700; color:#475569; }
     .day-cell { min-height:0; overflow:hidden; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px; position:relative; }
@@ -94,6 +95,11 @@
       <div>
         <h1>📅 ENG팀 월간 일정표</h1>
       </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background: var(--yang);"></span>양성민</div>
+        <div class="legend-item"><span class="legend-dot" style="background: var(--jang);"></span>장승호</div>
+        <div class="legend-item"><span class="legend-dot" style="background: var(--kwon);"></span>권두훈</div>
+      </div>
       <div class="controls">
         <div class="month-nav">
           <button class="secondary-btn" onclick="prevMonth()">◀</button>
@@ -101,15 +107,10 @@
           <button class="secondary-btn" onclick="nextMonth()">▶</button>
         </div>
         <button class="secondary-btn" onclick="goToday()">오늘</button>
+        <button class="secondary-btn" id="expandToggleBtn" onclick="toggleExpand()">확장</button>
         <button class="primary-btn" onclick="openModal(formatDateKey(currentDate))">+ 일정 추가</button>
       </div>
     </header>
-
-    <div class="legend">
-      <div class="legend-item"><span class="legend-dot" style="background: var(--yang);"></span>양성민</div>
-      <div class="legend-item"><span class="legend-dot" style="background: var(--jang);"></span>장승호</div>
-      <div class="legend-item"><span class="legend-dot" style="background: var(--kwon);"></span>권두훈</div>
-    </div>
 
     <div class="calendar" id="calendar"></div>
   </div>
@@ -197,6 +198,13 @@
     let editingEventId = null;
     let dragSelection = null;
     let dragEventState = null;
+    let isExpanded = false;
+
+    function toggleExpand() {
+      isExpanded = !isExpanded;
+      document.getElementById('calendar').classList.toggle('expanded', isExpanded);
+      document.getElementById('expandToggleBtn').textContent = isExpanded ? '축소' : '확장';
+    }
 
     function getApiUrl(path) {
       return API_BASE_URL ? `${API_BASE_URL}${path}` : `${location.origin}${path}`;
