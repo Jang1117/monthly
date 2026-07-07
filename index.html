@@ -613,15 +613,29 @@
         const deltaDays = dragEventState.lastDeltaDays;
         if (deltaDays !== 0) {
           const id = dragEventState.eventId;
-          events = events.map(ev => {
-            if (ev.id !== id) return ev;
-            const newStart = addDays(ev.startDate, deltaDays);
-            const newEnd = addDays(ev.endDate, deltaDays);
-            const updated = { ...ev, startDate: newStart, endDate: newEnd };
-            apiUpdateEvent(id, updated);
-            return updated;
-          });
-          renderCalendar();
+          if (e.ctrlKey) {
+            const sourceEvent = events.find(ev => ev.id === id);
+            if (sourceEvent) {
+              const newStart = addDays(sourceEvent.startDate, deltaDays);
+              const newEnd = addDays(sourceEvent.endDate, deltaDays);
+              const payload = { ...sourceEvent, startDate: newStart, endDate: newEnd };
+              delete payload.id;
+              const created = await apiCreateEvent(payload);
+              events.push(normalizeEvents([created])[0]);
+              try { localStorage.setItem('monthlyScheduleEvents', JSON.stringify(events)); } catch (err) {}
+              renderCalendar();
+            }
+          } else {
+            events = events.map(ev => {
+              if (ev.id !== id) return ev;
+              const newStart = addDays(ev.startDate, deltaDays);
+              const newEnd = addDays(ev.endDate, deltaDays);
+              const updated = { ...ev, startDate: newStart, endDate: newEnd };
+              apiUpdateEvent(id, updated);
+              return updated;
+            });
+            renderCalendar();
+          }
         }
         dragEventState = null;
       }
