@@ -119,7 +119,7 @@
     <div class="modal-card">
       <h3 id="modalTitle">새 일정 추가</h3>
       <div class="user-picker">
-        <button type="button" class="user-btn yang active" data-user="yang">양성민</button>
+        <button type="button" class="user-btn yang" data-user="yang">양성민</button>
         <button type="button" class="user-btn jang" data-user="jang">장승호</button>
         <button type="button" class="user-btn kwon" data-user="kwon">권두훈</button>
       </div>
@@ -193,7 +193,7 @@
 
     let currentDate = new Date();
     let events = [];
-    let selectedUsers = ['yang'];
+    let selectedUsers = [];
     let selectedType = 'general';
     let editingEventId = null;
     let dragSelection = null;
@@ -544,7 +544,7 @@
       const modalTitle = document.getElementById('modalTitle');
 
       editingEventId = event ? event.id : null;
-      selectedUsers = event ? [...event.users] : ['yang'];
+      selectedUsers = event ? [...event.users] : [];
       selectedType = event?.type || 'general';
       updateUserButtons();
       updateTypeButtons();
