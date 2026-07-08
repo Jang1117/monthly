@@ -461,6 +461,13 @@
           }
         });
 
+        cell.addEventListener('touchstart', (e) => {
+          if (e.target.closest('button') || e.target.closest('.event-bar')) return;
+          dragSelection = { active: true, startDate: dateKey, endDate: dateKey };
+          cell.classList.add('drag-active');
+          renderCalendar();
+        }, { passive: true });
+
         calendar.appendChild(cell);
       }
 
@@ -708,6 +715,22 @@
       dragEventState.bar.style.transform = `translate(${deltaCols * dragEventState.cellWidth}px, ${deltaRows * dragEventState.rowHeight}px)`;
     });
 
+    document.addEventListener('touchmove', (e) => {
+      if (!dragSelection || !dragSelection.active) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cell = el ? el.closest('.day-cell') : null;
+      if (cell && cell.dataset.date && cell.dataset.date !== dragSelection.endDate) {
+        dragSelection.endDate = cell.dataset.date;
+        renderCalendar();
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', () => {
+      finalizeDragSelection();
+    });
+
     document.addEventListener('mouseup', async (e) => {
       if (dragEventState && dragEventState.active) {
         dragEventState.bar.classList.remove('dragging');
@@ -770,6 +793,17 @@
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(renderCalendar, 150);
     });
+
+    let wheelCooldown = false;
+    document.getElementById('calendar').addEventListener('wheel', (e) => {
+      if (isExpanded) return; // let the expanded view scroll normally
+      if (Math.abs(e.deltaY) < 15) return;
+      e.preventDefault();
+      if (wheelCooldown) return;
+      wheelCooldown = true;
+      if (e.deltaY > 0) nextMonth(); else prevMonth();
+      setTimeout(() => { wheelCooldown = false; }, 450);
+    }, { passive: false });
 
     renderCalendar();
     loadEvents();
