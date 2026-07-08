@@ -83,8 +83,10 @@
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .form-row.time-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,100px); align-items:flex-start; }
     .checkbox-group label { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:60px; padding:10px 8px; border:1px solid var(--line); border-radius:12px; background:#f8fafc; text-align:center; font-size:0.86rem; }
-    input, textarea { width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; color:var(--text); }
+    input, textarea, select { width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; color:var(--text); }
     textarea { min-height:72px; }
+    .time-select-group { display:flex; gap:6px; }
+    .time-select-group select { padding:10px 4px; text-align:center; }
     .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
     .danger-btn { background:#fee2e2; color:#b91c1c; }
 
@@ -179,12 +181,22 @@
 
       <div class="form-row time-row">
         <div class="form-group">
-          <label for="startTime">시작 시간</label>
-          <input type="time" id="startTime" value="09:00" />
+          <label>시작 시간</label>
+          <div class="time-select-group">
+            <select id="startPeriod"><option value="AM">오전</option><option value="PM">오후</option></select>
+            <select id="startHour"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
+            <select id="startMinute"><option value="0">00</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option></select>
+          </div>
+          <input type="hidden" id="startTime" value="09:00" />
         </div>
         <div class="form-group">
-          <label for="endTime">종료 시간</label>
-          <input type="time" id="endTime" value="10:00" />
+          <label>종료 시간</label>
+          <div class="time-select-group">
+            <select id="endPeriod"><option value="AM">오전</option><option value="PM">오후</option></select>
+            <select id="endHour"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>
+            <select id="endMinute"><option value="0">00</option><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option></select>
+          </div>
+          <input type="hidden" id="endTime" value="10:00" />
         </div>
         <div class="form-group checkbox-group">
           <label for="allDayCheckbox">
@@ -289,6 +301,40 @@
 
     function isSameDate(a, b) {
       return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function buildTimeValue(period, hour12, minute) {
+      let h = parseInt(hour12, 10) % 12;
+      if (period === 'PM') h += 12;
+      return `${String(h).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    }
+
+    function splitTimeValue(hhmm) {
+      const [hStr, mStr] = (hhmm || '09:00').split(':');
+      const h = parseInt(hStr, 10) || 0;
+      const period = h >= 12 ? 'PM' : 'AM';
+      let hour12 = h % 12;
+      if (hour12 === 0) hour12 = 12;
+      let minute = Math.round((parseInt(mStr, 10) || 0) / 10) * 10;
+      if (minute === 60) minute = 0;
+      return { period, hour12, minute };
+    }
+
+    function syncTimeSelectsFromValue(prefix) {
+      const value = document.getElementById(`${prefix}Time`).value;
+      const { period, hour12, minute } = splitTimeValue(value);
+      document.getElementById(`${prefix}Period`).value = period;
+      document.getElementById(`${prefix}Hour`).value = String(hour12);
+      document.getElementById(`${prefix}Minute`).value = String(minute);
+    }
+
+    function syncTimeValueFromSelects(prefix) {
+      const period = document.getElementById(`${prefix}Period`).value;
+      const hour12 = document.getElementById(`${prefix}Hour`).value;
+      const minute = document.getElementById(`${prefix}Minute`).value;
+      const hidden = document.getElementById(`${prefix}Time`);
+      hidden.value = buildTimeValue(period, hour12, minute);
+      hidden.dispatchEvent(new Event('change'));
     }
 
     function isDateInRange(date, startDate, endDate) {
@@ -598,6 +644,11 @@
       allDayCheckbox.checked = isAllDay;
       startTimeInput.value = event?.startTime || '09:00';
       endTimeInput.value = event?.endTime || '10:00';
+      syncTimeSelectsFromValue('start');
+      syncTimeSelectsFromValue('end');
+      ['startPeriod', 'startHour', 'startMinute', 'endPeriod', 'endHour', 'endMinute'].forEach(id => {
+        document.getElementById(id).disabled = isAllDay;
+      });
       startTimeInput.disabled = isAllDay;
       endTimeInput.disabled = isAllDay;
       document.getElementById('memo').value = event?.memo || '';
@@ -614,8 +665,13 @@
       document.getElementById('endDate').value = '';
       document.getElementById('startTime').value = '09:00';
       document.getElementById('endTime').value = '10:00';
+      syncTimeSelectsFromValue('start');
+      syncTimeSelectsFromValue('end');
       document.getElementById('memo').value = '';
       document.getElementById('allDayCheckbox').checked = false;
+      ['startPeriod', 'startHour', 'startMinute', 'endPeriod', 'endHour', 'endMinute'].forEach(id => {
+        document.getElementById(id).disabled = false;
+      });
       document.getElementById('startTime').disabled = false;
       document.getElementById('endTime').disabled = false;
       selectedType = 'general';
@@ -674,13 +730,29 @@
       if (Number.isNaN(h) || Number.isNaN(m)) return;
       const newHour = (h + 1) % 24;
       document.getElementById('endTime').value = `${String(newHour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      syncTimeSelectsFromValue('end');
+    });
+
+    ['startPeriod', 'startHour', 'startMinute'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => syncTimeValueFromSelects('start'));
+    });
+    ['endPeriod', 'endHour', 'endMinute'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => syncTimeValueFromSelects('end'));
     });
 
     document.getElementById('allDayCheckbox').addEventListener('change', (e) => {
       const disabled = e.target.checked;
+      ['startPeriod', 'startHour', 'startMinute', 'endPeriod', 'endHour', 'endMinute'].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+      });
       document.getElementById('startTime').disabled = disabled;
       document.getElementById('endTime').disabled = disabled;
-      if (disabled) { document.getElementById('startTime').value = '09:00'; document.getElementById('endTime').value = '10:00'; }
+      if (disabled) {
+        document.getElementById('startTime').value = '09:00';
+        document.getElementById('endTime').value = '10:00';
+        syncTimeSelectsFromValue('start');
+        syncTimeSelectsFromValue('end');
+      }
     });
 
     document.querySelectorAll('.user-btn').forEach(btn => {
