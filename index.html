@@ -81,8 +81,9 @@
     .type-btn.vacation.active { background: #f59e0b; border-color: #f59e0b; }
     .type-btn.external.active { background: #0ea5e9; border-color: #0ea5e9; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .form-row.time-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,100px); align-items:flex-start; }
-    .checkbox-group label { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:60px; padding:10px 8px; border:1px solid var(--line); border-radius:12px; background:#f8fafc; text-align:center; font-size:0.86rem; }
+    .form-row.time-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); align-items:flex-start; }
+    .spacer-label { visibility:hidden; }
+    .checkbox-group .allday-toggle { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#f8fafc; text-align:center; font-size:0.9rem; box-sizing:border-box; cursor:pointer; }
     input, textarea, select { width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; color:var(--text); }
     textarea { min-height:72px; }
     .time-select-group { display:flex; gap:6px; }
@@ -199,9 +200,10 @@
           <input type="hidden" id="endTime" value="10:00" />
         </div>
         <div class="form-group checkbox-group">
-          <label for="allDayCheckbox">
+          <label class="spacer-label" aria-hidden="true">&nbsp;</label>
+          <label class="allday-toggle" for="allDayCheckbox">
             <input type="checkbox" id="allDayCheckbox" />
-            <span>All Day</span>
+            <span>종일</span>
           </label>
         </div>
       </div>
