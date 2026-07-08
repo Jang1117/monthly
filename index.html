@@ -523,6 +523,13 @@
       renderEventBars(dateKeys, cellMap);
     }
 
+    function sortEventsForDisplay(list) {
+      return [...list].sort((a, b) => {
+        if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+        return (a.startTime || '00:00').localeCompare(b.startTime || '00:00');
+      });
+    }
+
     function renderEventBars(dateKeys, cellMap) {
       const calendar = document.getElementById('calendar');
       calendar.querySelectorAll('.event-bar').forEach(el => el.remove());
@@ -531,7 +538,7 @@
       // segments that actually overlap in date get stacked below one another.
       const rowSlots = Array.from({ length: rows }, () => []);
 
-      events.forEach(ev => {
+      sortEventsForDisplay(events).forEach(ev => {
         const eventStart = ev.startDate;
         const eventEnd = ev.endDate;
         const visibleStart = dateKeys[0];
