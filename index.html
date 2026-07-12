@@ -267,6 +267,10 @@
     let dragEventState = null;
     let isExpanded = false;
 
+    function isMobileView() {
+      return window.matchMedia('(max-width: 780px)').matches;
+    }
+
     function toggleExpand() {
       isExpanded = !isExpanded;
       document.getElementById('calendar').classList.toggle('expanded', isExpanded);
@@ -613,7 +617,7 @@
           const namesLabel = ev.users.length >= Object.keys(userMeta).length
             ? '팀'
             : ev.users.map(u => userMeta[u]?.name).filter(Boolean).join(', ');
-          const timeLabel = ev.allDay ? '' : `${ev.startTime} `;
+          const timeLabel = '';
           if (ev.type === 'external') {
             bar.textContent = ev.memo ? `${timeLabel}${ev.memo} - ${namesLabel}` : `${timeLabel}${namesLabel}`;
           } else {
@@ -636,6 +640,7 @@
           });
 
           bar.addEventListener('click', (e) => {
+            if (isMobileView()) return;
             if (dragEventState && dragEventState.active) return;
             e.stopPropagation();
             openModal(segStart, ev);
